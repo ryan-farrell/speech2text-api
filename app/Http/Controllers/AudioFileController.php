@@ -18,7 +18,19 @@ class AudioFileController extends Controller
      */
     public function uploadAndTranscode(Request $request, AudioFile $audioFile)
     {
-        // If successful respond
-        return response()->json(['message' => 'Your file has been transcribed.']);
+
+        // Set the values of the file to be saved
+        $audioFile->file_name = 'Test';
+        $audioFile->transcript ='Test test test';
+        $audioFile->request_sent_at = now();
+        $audioFile->created_at = now();
+        $audioFile->updated_at = now();
+
+        // Save the details of this file
+        if ($audioFile->save()) {
+
+            // If successful respond
+            return response()->json(['message' => 'Your file has been transcribed.']);
+        }
     }
 }
