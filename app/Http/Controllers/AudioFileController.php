@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\AudioFile;
+
+class AudioFileController extends Controller
+{
+    /**
+     * Create the audio file in storage and save the file details
+     * in the database along with the transcription from Google's speech-to-text API.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\AudioFile  $audioFile
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function uploadAndTranscode(Request $request, AudioFile $audioFile)
+    {
+        // If successful respond
+        return response()->json(['message' => 'Your file has been transcribed.']);
+    }
+}
