@@ -19,4 +19,6 @@ use App\Http\Controllers\AudioFileController;
 //     return $request->user();
 // });
 
-Route::post('/v1/speech-2-text', [AudioFileController::class, 'uploadAndTranscode']);
+Route::get('/v1/audiofiles/', [AudioFileController::class, 'transcriptions']);
+
+Route::post('/v1/audiofiles/', [AudioFileController::class, 'transcode']);

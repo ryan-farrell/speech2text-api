@@ -13,16 +13,92 @@ use Google\Cloud\Speech\V1\RecognitionConfig\AudioEncoding;
 
 class AudioFileController extends Controller
 {
-    /**
-     * Create the audio file in storage and save the file details
-     * in the database along with the transcription from Google's speech-to-text API.
+    /** 
+     * @api {GET} api/v1/audiofiles/    Retrieve a transcribed audio file
+     *
+     * @apiVersion 1.0.0
+     *
+     * @apiDescription  Endpoint to retrieve a transcribed audio files details
+     * and also allow a quick check that the API is responding for a client 
+     *
+     * @apiName Transcriptions
+     * @apiGroup Audio
+     *
+     * @apiParam (None) Simple confirmation of connection response
+     * @apiParam (Filter Parameters) {string} id The audio file ID
+     *
+     * @apiSuccess {audioFile} The audio file details
+     * @apiSuccessExample {json} Details of the audio file
+     * 
+     * {
+     *   "data": { 
+     *              "status":"success"
+     *              "message":"Your connecting to the API! Now supply an ID of the audio file you'd like to see details for."
+     *           },
+     *   "error":[]
+     * }
+     * 
+     * @apiError (Error 400) BadRequest An invalid file id produced  // @todo Check with Laravel API filters 
+     * @apiError (Error 404) NotFound File id not found  // @todo Check with Laravel API filters
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\AudioFile  $audioFile
+     * @return \Illuminate\Http\Response
+     */
+    public function transcriptions(Request $request, AudioFile $audioFile)
+    {
+
+        // If successfully connected respond with 
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'message' => 'Your connecting to the API! Now supply an ID of the audio file you\'d like to see details for.'
+            ],
+            'errors' => []
+        ]);
+    }
+
+    /** 
+     * @api {POST} api/v1/audiofiles/   Send an audio file to be transcribed
+     *
+     * @apiVersion 1.0.0
+     *
+     * @apiDescription  Create an audio file in storage and save the file details
+     * in the database along with the transcription from Google's speech-to-text API. 
+     *
+     * @apiName Transcode
+     * @apiGroup Audio
+     *
+     * @apiParam (File) {string} file  The base64encoded flac audio file
+     *
+     * @apiSuccess {audioFile} The audio file details
+     * @apiSuccessExample {json} Details of the audio file
+     * 
+     * {
+     *   "status": "success",
+     *   "data": {
+     *             "message": "Your file has been transcribed.",
+     *             "id": 7,
+     *             "file_name": "base64encodedflacfile1613685008",
+     *             "request_sent_at": "2021-02-18T21:50:08.000000Z",
+     *             "transcript": "ok this is a testing track to see if you can hear me",
+     *             "confidence": 0.9516302,
+     *             "rate hertz": 44100,
+     *             "no_of_alternatives": 1,
+     *             "file_size": 364068
+     *   },
+     *   "errors": []
+     * }
+     * 
+     *@apiError (Error 502) BadGateway The server received an invalid response from GoogleAPI
+     *@apiError (Error 400) NotFound File not attached to request 
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\AudioFile  $audioFile
      *
      * @return \Illuminate\Http\Response
      */
-    public function uploadAndTranscode(Request $request, AudioFile $audioFile)
+    public function transcode(Request $request, AudioFile $audioFile)
     {
         // The time  the request was received here will set as time it was sent
         // by the client
@@ -118,7 +194,7 @@ class AudioFileController extends Controller
 
             // Set the values of the file to be saved
             $audioFile->file_name = $origFilename;
-            $audioFile->mime = $request->mime;
+            $audioFile->mime = 'audio/flac';
             $audioFile->rate_hertz = $sampleRateHertz;
             $audioFile->transcript = $transcript;
             $audioFile->confidence = $confidence;
@@ -132,23 +208,45 @@ class AudioFileController extends Controller
             if ($audioFile->save()) {
 
                 // If successful respond in kind
-                return response()->json(['message' => 'Your file has been transcribed.']);
+                return response()->json([
+                    'status' => 'success',
+                    'data' => [
+                        'message' => 'Your file has been transcribed.',
+                        'id' => $audioFile->id,
+                        'file_name' => $audioFile->file_name,
+                        'request_sent_at' => $audioFile->request_sent_at,
+                        'transcript' => $audioFile->transcript,
+                        'confidence' => $audioFile->confidence,
+                        'rate hertz' => $audioFile->rate_hertz,
+                        'no_of_alternatives' => $audioFile->no_of_alternatives,
+                        'file_size' => $audioFile->file_size,
+                    ],
+                    'errors' => []
+                ]);
             }
 
             /**
              *@todo Failed to save (check if error from a connection to google api we can attempt again with the saved file)
              */
             return response()->json([
-                'error' => 'There was a problem transcribing and saving audio file.',
-                'error_code' => 1613606485,
-            ], 400);
+                'status' => 'failure',
+                'data' => [],
+                'errors' => [
+                    'message' => 'There was a problem transcribing and saving audio file.',
+                    'error_code' => 1613606485,
+                ],
+            ], 502);
 
         } else {
 
             // No file uploaded respond with error
             return response()->json([
-                'error' => 'No file attached!!',
-                'error_code' => 1613606336,
+                'status' => 'failure',
+                'data' => [],
+                'errors' => [
+                    'message' => 'No file attached!',
+                    'error_code' => 1613606336,
+                ]
             ], 400);
         }
     }
