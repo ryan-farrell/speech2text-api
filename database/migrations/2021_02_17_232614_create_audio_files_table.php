@@ -16,7 +16,12 @@ class CreateAudioFilesTable extends Migration
         Schema::create('audio_files', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->text('file_name')->comment('File Name');
+            $table->text('mime')->comment('Mime Type');
+            $table->integer('rate_hertz')->comment('Rate Hertz');
             $table->text('transcript')->comment('Transcript');
+            $table->float('confidence')->comment('Confidence');
+            $table->integer('no_of_alternatives')->comment('No. of Alternatives');
+            $table->integer('file_size')->comment('File Size');
             $table->dateTime('request_sent_at')->comment('Request Sent At');
             $table->timestamps();
         });

@@ -16,7 +16,12 @@ class AudioFile extends File
      */
     protected $fillable = [
         'file_name',
+        'mime',
+        'rate_hertz',
         'transcript',
+        'confidence',
+        'no_of_alternatives',
+        'file_size',
         'request_sent_at',
         'created_at',
         'updated_at',

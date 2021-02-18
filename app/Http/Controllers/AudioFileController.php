@@ -72,7 +72,7 @@ class AudioFileController extends Controller
              */
 
             // Get the file size for later
-            $fileSize = Storage::size('files/audio/'.$origFilename); /** *@todo add to db table with migration ??*/
+            $audioFileSize = Storage::size('files/audio/'.$origFilename);
 
             // Now we our decoded file 
             Storage::deleteDirectory('files/temp');
@@ -80,7 +80,9 @@ class AudioFileController extends Controller
             // Credentials needed to use API
             putenv('GOOGLE_APPLICATION_CREDENTIALS='.base_path('setup-files/setup.json'));
 
-            // Get details from the headers for these 2 change these variables if necessary
+            /**
+             *@todo This is going to have to be from the query on the file from the 3rd party package FFMpeg
+             */ 
             $sampleRateHertz = 44100;
             $fileEncoding = AudioEncoding::FLAC;
 
@@ -94,30 +96,34 @@ class AudioFileController extends Controller
                 ->setSampleRateHertz($sampleRateHertz)
                 ->setLanguageCode('en-GB');
 
-            //Create the speech client
+            // Create the speech client
             $speechClient = new SpeechClient();
 
             try {
-
+                // Get our response from Google API
                 $response = $speechClient->recognize($config, $audio);
 
                 foreach ($response->getResults() as $result) {
-                
+
                     $alternatives = $result->getAlternatives();
                     $mostLikely = $alternatives[0];
                     $transcript = $mostLikely->getTranscript();
-                    $confidence = $mostLikely->getConfidence(); /** *@todo add to db table with migration ?? */
-                    $numOfAlternatives = count($alternatives); /** *@todo add to db table with migration ?? */
-                
+                    $confidence = $mostLikely->getConfidence();
+                    $numOfAlternatives = count($alternatives);
                 }
             } finally {
-                
+                // Close the speech client
                 $speechClient->close();
             }
 
             // Set the values of the file to be saved
             $audioFile->file_name = $origFilename;
+            $audioFile->mime = $request->mime;
+            $audioFile->rate_hertz = $sampleRateHertz;
             $audioFile->transcript = $transcript;
+            $audioFile->confidence = $confidence;
+            $audioFile->no_of_alternatives = $numOfAlternatives;
+            $audioFile->file_size = $audioFileSize;
             $audioFile->request_sent_at = $requestSentAt;
             $audioFile->created_at = now();
             $audioFile->updated_at = now();
@@ -129,7 +135,9 @@ class AudioFileController extends Controller
                 return response()->json(['message' => 'Your file has been transcribed.']);
             }
 
-            // Failed to save (check if error from a connection to google api we can attempt with the saved file)
+            /**
+             *@todo Failed to save (check if error from a connection to google api we can attempt again with the saved file)
+             */
             return response()->json([
                 'error' => 'There was a problem transcribing and saving audio file.',
                 'error_code' => 1613606485,
