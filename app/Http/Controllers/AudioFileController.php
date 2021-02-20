@@ -7,11 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
-use Google\Cloud\Speech\V1\SpeechClient;
-use Google\Cloud\Speech\V1\RecognitionAudio;
-use Google\Cloud\Speech\V1\RecognitionConfig;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Google\Cloud\Speech\V1\RecognitionConfig\AudioEncoding;
 use Illuminate\Http\JsonResponse;
 
 class AudioFileController extends Controller
@@ -194,49 +190,13 @@ class AudioFileController extends Controller
             // Credentials needed to use API
             putenv('GOOGLE_APPLICATION_CREDENTIALS='.base_path('setup-files/setup.json'));
 
-            /**
-             *@todo This is going to have to be from the query on the file from the 3rd party package FFMpeg
-             */ 
-            $sampleRateHertz = 44100;
-            $fileEncoding = AudioEncoding::FLAC;
-
-            // Set content of the file on the audio object ready to be passed to the SpeechClient 
-            $audio = (new RecognitionAudio())
-                ->setContent($contents);
-
-            // Set config
-            $config = (new RecognitionConfig())
-                ->setEncoding($fileEncoding)
-                ->setSampleRateHertz($sampleRateHertz)
-                ->setLanguageCode('en-GB');
-
-            // Create the speech client
-            $speechClient = new SpeechClient();
-
-            try {
-                // Get our response from Google API
-                $response = $speechClient->recognize($config, $audio);
-
-                foreach ($response->getResults() as $result) {
-
-                    $alternatives = $result->getAlternatives();
-                    $mostLikely = $alternatives[0];
-                    $transcript = $mostLikely->getTranscript();
-                    $confidence = $mostLikely->getConfidence();
-                    $numOfAlternatives = count($alternatives);
-                }
-            } finally {
-                // Close the speech client
-                $speechClient->close();
-            }
+            // Call Google API and transcribe the file
+            $audioFile->transcribeFile($contents);
 
             // Set the values of the file to be saved
             $audioFile->file_name = $origFilename;
             $audioFile->mime = 'audio/flac';
-            $audioFile->rate_hertz = $sampleRateHertz;
-            $audioFile->transcript = $transcript;
-            $audioFile->confidence = $confidence;
-            $audioFile->no_of_alternatives = $numOfAlternatives;
+            $audioFile->rate_hertz = AudioFile::RATE_HERTZ;
             $audioFile->file_size = $audioFileSize;
             $audioFile->request_sent_at = $requestSentAt;
             $audioFile->created_at = now();

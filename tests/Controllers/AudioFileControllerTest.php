@@ -108,6 +108,9 @@ class AudioFileControllerTest extends TestCase {
             ])
             ->assertJsonFragment([
                 'status' => 'success',
+                'no_of_alternatives' => 1,
+                'transcript' => 'ok this is a testing track to see if you can hear me',
+                'file_size' => 364068,
             ]);
 
         /** @todo clean up the filesystem and db table. */
