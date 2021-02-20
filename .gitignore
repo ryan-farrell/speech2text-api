@@ -5,6 +5,7 @@
 /public/css
 /storage/*.key
 /vendor
+/tests/coverage
 .vscode
 .env
 .env.backup

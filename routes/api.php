@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AudioFileController;
 
@@ -15,10 +14,13 @@ use App\Http\Controllers\AudioFileController;
 |
 */
 
-// Route::middleware('auth:api')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
-
-Route::get('/v1/audiofiles/', [AudioFileController::class, 'transcriptions']);
-
-Route::post('/v1/audiofiles/', [AudioFileController::class, 'transcode']);
+/**
+ * API has GET route to retrieve an individual transcription {if id supplied}. If not 
+ * the GET response will be just a confirm connection response to that effect.
+ * 
+ * The POST route is used to upload a base 64 encoded FLAC audio file to be transcribed.
+ * The POST route body will need "form-data" with a key value pair [file => 'your_file']
+ * attached and the content type set to "multipart/form-data".
+ */
+Route::get('/v1/audiofiles/{id?}', [AudioFileController::class, 'transcriptions']);
+Route::post('/v1/audiofiles/', [AudioFileController::class, 'transcribed']);

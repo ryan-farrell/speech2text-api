@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\AudioFile;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Google\Cloud\Speech\V1\SpeechClient;
 use Google\Cloud\Speech\V1\RecognitionAudio;
 use Google\Cloud\Speech\V1\RecognitionConfig;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Google\Cloud\Speech\V1\RecognitionConfig\AudioEncoding;
+use Illuminate\Http\JsonResponse;
 
 class AudioFileController extends Controller
 {
@@ -28,7 +31,7 @@ class AudioFileController extends Controller
      * @apiParam (Filter Parameters) {string} id The audio file ID
      *
      * @apiSuccess {audioFile} The audio file details
-     * @apiSuccessExample {json} Details of the audio file
+     * @apiSuccessExamples {json} Confirmation message or details of the audio file transcription if id supplied
      * 
      * {
      *   "data": { 
@@ -38,24 +41,59 @@ class AudioFileController extends Controller
      *   "error":[]
      * }
      * 
-     * @apiError (Error 400) BadRequest An invalid file id produced  // @todo Check with Laravel API filters 
-     * @apiError (Error 404) NotFound File id not found  // @todo Check with Laravel API filters
+     * {
+     *   "status": "success",
+     *   "data": {
+     *       "message": "Audio was transcribed on 2021-02-18 13:53:01.",
+     *       "id": 3,
+     *       "file_name": "base64encodedflacfile1613656379",
+     *       "request_sent_at": "2021-02-18T13:52:59.000000Z",
+     *       "transcript": "ok this is a testing track to see if you can hear me",
+     *       "confidence": 0.95,
+     *       "rate hertz": 44100,
+     *       "no_of_alternatives": 1,
+     *       "file_size": 364068
+     *   },
+     *   "errors": []
+     * }
+     * 
+     * @apiError (Error 404) NotFound File id not found
+     *
+     * @apiErrorExamples {json} Error message the audio file searched could not be found
+     * 
+     * {
+     *   "status": "failure",
+     *   "data": [],
+     *   "errors": {
+     *       "message": "The file could not be found",
+     *       "error_code": 1513606716
+     *   }
+     * }
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\AudioFile  $audioFile
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function transcriptions(Request $request, AudioFile $audioFile)
+    public function transcriptions(Request $request, AudioFile $audioFile) : JsonResponse
     {
+        // If the request contains an id then one is being searched for 
+        if(isset($request->id)) {
 
-        // If successfully connected respond with 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'message' => 'Your connecting to the API! Now supply an ID of the audio file you\'d like to see details for.'
-            ],
-            'errors' => []
-        ]);
+            try {
+                // Quick check to see if a model has been found
+                $audioFile = AudioFile::findOrFail($request->id);
+
+                // If successfully connected respond with the details
+                return $audioFile->jsonSuccess('Audio was transcribed on '.$audioFile->created_at.'.', true, Response::HTTP_OK);
+
+            } catch (ModelNotFoundException $e) {
+                // If no model catch and return it here
+                return $audioFile->jsonError('The file could not be found', 1513606716, Response::HTTP_NOT_FOUND);
+            }
+        }
+
+        // If no filter/id supplied we still want them them to receive 200 response to confirm they're connecting OK
+        return $audioFile->jsonSuccess('Your connecting to the API! Now supply an ID of the audio file you\'d like to see the transcription for.');
     }
 
     /** 
@@ -90,15 +128,15 @@ class AudioFileController extends Controller
      *   "errors": []
      * }
      * 
-     *@apiError (Error 502) BadGateway The server received an invalid response from GoogleAPI
-     *@apiError (Error 400) NotFound File not attached to request 
+     * @apiError (Error 502) BadGateway The server received an invalid response from GoogleAPI
+     * @apiError (Error 400) NotFound File not attached to request 
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\AudioFile  $audioFile
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function transcode(Request $request, AudioFile $audioFile)
+    public function transcribed(Request $request, AudioFile $audioFile) : JsonResponse
     {
         // The time  the request was received here will set as time it was sent
         // by the client
@@ -206,48 +244,19 @@ class AudioFileController extends Controller
 
             // Save the details of this file
             if ($audioFile->save()) {
-
-                // If successful respond in kind
-                return response()->json([
-                    'status' => 'success',
-                    'data' => [
-                        'message' => 'Your file has been transcribed.',
-                        'id' => $audioFile->id,
-                        'file_name' => $audioFile->file_name,
-                        'request_sent_at' => $audioFile->request_sent_at,
-                        'transcript' => $audioFile->transcript,
-                        'confidence' => $audioFile->confidence,
-                        'rate hertz' => $audioFile->rate_hertz,
-                        'no_of_alternatives' => $audioFile->no_of_alternatives,
-                        'file_size' => $audioFile->file_size,
-                    ],
-                    'errors' => []
-                ]);
+                // If save was successful respond with the details
+                return $audioFile->jsonSuccess('Your file has been transcribed.', true, Response::HTTP_OK);
+            } else {
+                /**
+                 *@todo Failed to save to our database. Maybe retry from the file system copy.
+                */
+                return $audioFile->jsonError('There was a problem saving the audio file.', 1613606485, Response::HTTP_BAD_GATEWAY);
             }
-
-            /**
-             *@todo Failed to save (check if error from a connection to google api we can attempt again with the saved file)
-             */
-            return response()->json([
-                'status' => 'failure',
-                'data' => [],
-                'errors' => [
-                    'message' => 'There was a problem transcribing and saving audio file.',
-                    'error_code' => 1613606485,
-                ],
-            ], 502);
 
         } else {
 
             // No file uploaded respond with error
-            return response()->json([
-                'status' => 'failure',
-                'data' => [],
-                'errors' => [
-                    'message' => 'No file attached!',
-                    'error_code' => 1613606336,
-                ]
-            ], 400);
+            return $audioFile->jsonError('No file attached!', 1613606336, Response::HTTP_BAD_REQUEST);
         }
     }
 }
