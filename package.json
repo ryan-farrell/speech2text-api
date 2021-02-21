@@ -1,5 +1,13 @@
 {
     "private": true,
+    "apidoc": {
+        "name": "Speech-2-Text",
+        "title": "Speech-2-Text apiDoc",
+        "url": "https://localhost:8000/",
+        "version": "0.1.0",
+        "description": "API endpoint that will consume Google's own Speech-to-Text API, and return in the response the speech contained on an audio file transcribed into English language text."
+
+    },
     "scripts": {
         "dev": "npm run development",
         "development": "mix",
@@ -7,12 +15,20 @@
         "watch-poll": "mix watch -- --watch-options-poll=1000",
         "hot": "mix watch --hot",
         "prod": "npm run production",
-        "production": "mix --production"
+        "production": "mix --production",
+        "apidoc": "apidoc -i app/Http/Controllers -o apidocs/",
+        "api-setup": "composer update && npm i && npm run prod && php artisan migrate && npm run apidoc && php artisan serve",
+        "tests": ".\\vendor\\bin\\phpunit",
+        "coverage": ".\\vendor\\bin\\phpunit --coverage-html tests/coverage"
+
     },
     "devDependencies": {
         "axios": "^0.21",
         "laravel-mix": "^6.0.6",
         "lodash": "^4.17.19",
         "postcss": "^8.1.14"
+    },
+    "dependencies": {
+        "apidoc": "^0.26.0"
     }
 }

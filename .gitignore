@@ -5,6 +5,7 @@
 /public/css
 /storage/*.key
 /vendor
+/apidocs
 /tests/coverage
 .vscode
 .env

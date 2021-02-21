@@ -15,25 +15,43 @@ class AudioFileController extends Controller
     /** 
      * @api {GET} api/v1/audiofiles/    Retrieve a transcribed audio file
      *
-     * @apiVersion 1.0.0
+     * @apiVersion 0.1.0
      *
-     * @apiDescription  Endpoint to retrieve a transcribed audio files details
-     * and also allow a quick check that the API is responding for a client 
-     *
-     * @apiName Transcriptions
+     * @apiName Transcription
      * @apiGroup Audio
      *
-     * @apiParam (None) Simple confirmation of connection response
-     * @apiParam (Filter Parameters) {string} id The audio file ID
+     * @apiDescription  Endpoint to retrieve a previously transcribed files details. It will also allow
+     * a quick check that the API is responding for a client if no file id passed in the URL, see example usage.
      *
-     * @apiSuccess {audioFile} The audio file details
-     * @apiSuccessExamples {json} Confirmation message or details of the audio file transcription if id supplied
+     * @apiExample Example usage (without id):
+     * curl -i http://localhost:8000/api/v1/audiofiles/
+     *
+     * @apiExample Example usage (with id):
+     * curl -i http://localhost:8000/api/v1/audiofiles/1
+     * 
+     * @apiParam (Filter Parameters) {null}   -   Just leave it empty
+     * @apiParam (Filter Parameters) {number} id  The audio file id
+     *
+     * @apiSuccess {string}      status             Response outcome
+     * @apiSuccess {object}      data               All the data held on the file
+     * @apiSuccess {string}      message            Confirmation message
+     * @apiSuccess {number}      id                 file id
+     * @apiSuccess {string}      file_name          New unique filename
+     * @apiSuccess {datetime}    request_sent_at    Datetime request received by the server
+     * @apiSuccess {string}      transcript         The audio transcribed
+     * @apiSuccess {number}      confidence         The APIs accuracy of the transcription
+     * @apiSuccess {number}      rate_hertz         The hertz rate
+     * @apiSuccess {number}      no_of_alternatives No. of alternative transcriptions
+     * @apiSuccess {number}      file_size          The file size
+     * @apiSuccess {array}       errors             An array of errors (empty on success)
+     * 
+     * @apiSuccessExample {json} Confirmation message or details of the audio file transcription if valid id supplied
      * 
      * {
+     *   "status":"success",
      *   "data": { 
-     *              "status":"success"
-     *              "message":"Your connecting to the API! Now supply an ID of the audio file you'd like to see details for."
-     *           },
+     *      "message":"Your connecting to the API! Now supply an ID of the audio file you'd like to see details for."
+     *   },
      *   "error":[]
      * }
      * 
@@ -55,7 +73,7 @@ class AudioFileController extends Controller
      * 
      * @apiError (Error 404) NotFound File id not found
      *
-     * @apiErrorExamples {json} Error message the audio file searched could not be found
+     * @apiErrorExample {json} Error message: The file could not be found
      * 
      * {
      *   "status": "failure",
@@ -66,9 +84,6 @@ class AudioFileController extends Controller
      *   }
      * }
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\AudioFile  $audioFile
-     * @return \Illuminate\Http\JsonResponse
      */
     public function transcriptions(Request $request, AudioFile $audioFile) : JsonResponse
     {
@@ -95,17 +110,20 @@ class AudioFileController extends Controller
     /** 
      * @api {POST} api/v1/audiofiles/   Send an audio file to be transcribed
      *
-     * @apiVersion 1.0.0
+     * @apiVersion 0.1.0
      *
-     * @apiDescription  Create an audio file in storage and save the file details
-     * in the database along with the transcription from Google's speech-to-text API. 
+     * @apiDescription  Get the text from an audio file in a response from Google's speech-to-text API.
+     * The uploaded audio file details will be stored in the database along with the transcription details. 
      *
      * @apiName Transcode
      * @apiGroup Audio
      *
-     * @apiParam (File) {string} file  The base64encoded flac audio file
+     * @apiExample Example usage:
+     * curl -X POST -F "file=@{PATH_TO\YOUR\ENCODED_FILE)" http://127.0.0.1:8000/api/v1/audiofiles
+     * 
+     * @apiParam (Filter Parameters) {string} file The base64encoded flac audio file
      *
-     * @apiSuccess {audioFile} The audio file details
+     * @apiSuccess {AudioFile} object Details of the audio file
      * @apiSuccessExample {json} Details of the audio file
      * 
      * {
@@ -125,12 +143,7 @@ class AudioFileController extends Controller
      * }
      * 
      * @apiError (Error 502) BadGateway The server received an invalid response from GoogleAPI
-     * @apiError (Error 400) NotFound File not attached to request 
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\AudioFile  $audioFile
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * @apiError (Error 400) NoFileAttached File not attached to request 
      */
     public function transcribed(Request $request, AudioFile $audioFile) : JsonResponse
     {
@@ -177,7 +190,9 @@ class AudioFileController extends Controller
             
             /** 
              *@todo Check the file here for length(secs), size, codec, encode, hertz? Will require 3rd party FFMpeg??
-             * Send back response file to large not good enough hertz wrong encoding? Then delete file if not transcribing
+             * Send back response to user file to large not good enough hertz wrong encoding etc. We could check the length here
+             * and if over 60 secs we could call the async version of google api that work on the larger files and then respond
+             * to the user at a later time with another form of communication. Then delete file if not transcribing
              * Storage::delete('files/audio/'.$origFilename)!!;
              */
 
