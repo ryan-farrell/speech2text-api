@@ -6,7 +6,6 @@
         "url": "https://localhost:8000/",
         "version": "0.1.0",
         "description": "API endpoint that will consume Google's own Speech-to-Text API, and return in the response the speech contained on an audio file transcribed into English language text."
-
     },
     "scripts": {
         "dev": "npm run development",
