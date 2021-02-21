@@ -61,7 +61,7 @@ DB_PASSWORD={your_password}
 ```
 5. Place a copy of your `google-credentials.json` (refer to *Getting Started* section above if you haven't got this file already) in the `\setup-files` directory found in the root dir of this project. Make sure to rename the file to `setup.json`. 
 
-6. In the command line make sure you are in the root directory of this api project. Run the command `npm run api-setup` which will go through a series of steps to get the package updated with its dependencies, migrate two tables into the database, create the API documentation and boot up a local server at http://127.0.0.1:8000 (the default URL done by Laravel).
+6. In the command line make sure you are in the root directory of this api project. Run the command `npm run api-setup` which will go through a series of steps to get the package updated with its dependencies, migrate two tables into the database and seed a single record, create the API documentation and boot up a local server at http://127.0.0.1:8000 (the default URL done by Laravel).
 
 7. You should be able to connect to the API [click this link](http://127.0.0.1:8000/api/v1/audiofiles) to get a simple message confirming connection to the API. *NOTE* If you are serving up your localhost from another **port other than 8000** (the Laravel default), you will need to amend the port in the example here and anywhere else it is shown, including the documentation. 
 
