@@ -30,13 +30,13 @@ A couple of handy links should you require help creating your own file ready to 
 * [Zamzar.com](https://www.zamzar.com/convert/m4a-to-flac/) - Convert M4A files to FLAC
 * [Base64.Guru](https://base64.guru/converter/encode/file) - Convert file to Base64
 
-Although I've listed creating your own encoded files in prerequisites there are a number of test files contained within the project that you can use to ensure the API is setup, and working prior to creating your own files. These files can be located in the directory `tests\files\audio\base64encodedflacfiles`. **NOTE** there are two files named `test_file*` inside of the `test\files\` dir removing these from this location will break the automated tests, which you can run and are referenced below. The other two files are yours to remove and upload as test files before making your own.
+Although I've listed creating your own encoded files in prerequisites, there are a number of test files contained within the project that you can use to ensure the API is setup, and working prior to creating your own files. These files can be located in the directory `tests\files\audio\base64encodedflacfiles`. **NOTE** there are two files named `test_file*` inside of the `test\files\` dir removing these from this location will break the automated tests, which you can run and are referenced below. The other two files are yours to remove and upload as test files before making your own.
 
 ## Installing & Setup
 ---
 A step by step guide to get you up and running with this API
 
-1. Clone down this repo to your local machine taking note taking note of the Built With section above as to to the technologies and software used to create
+1. Clone down this repo to your local machine taking note of the 'Built With' section above as to the technologies and software used to create
 this API on your local machine.
 
 ```
@@ -44,7 +44,7 @@ cd folder/to/clone-into/
 git clone https://github.com/ryan-farrell/speech2text-api.git
 ```
 
-2. Create a local database with the software you would do normally name the `speech2text-api` and setup your db user to have access to this new db. This is the db username you will use in point 3.
+2. Create a local database with the software you would do normally. Name the db `speech2text-api` and setup your db user to have access to this new db. This is the db username you will use in point 3.
 
 3. Copy and paste the `.env.example` file in the root folder of the directory and rename to just `.env`.
 
@@ -61,28 +61,32 @@ DB_PASSWORD={your_password}
 ```
 5. Place a copy of your `google-credentials.json` (refer to *Getting Started* section above if you haven't got this file already) in the `\setup-files` directory found in the root dir of this project. Make sure to rename the file to `setup.json`. 
 
-6. In the command line make sure your in the root directory of this api project. Run the command `npm run api-setup` which will go thru a series of steps to get the package updated with its dependencies, migrate two tables into the database, create the API documentation and boot up a local server at http://127.0.0.1:8000 (the default URL done by Laravel).
+6. In the command line make sure you are in the root directory of this api project. Run the command `npm run api-setup` which will go through a series of steps to get the package updated with its dependencies, migrate two tables into the database, create the API documentation and boot up a local server at http://127.0.0.1:8000 (the default URL done by Laravel).
 
-7. You should be able to connect to the API [click this link](http://127.0.0.1:8000/api/v1/audiofiles) to get a simple message confirming connection to the API. *NOTE* If you serving up your localhost from another **port other than 8000** (the Laravel default) you will need to amend the port in the example here and anywhere else it is shown, including the documentation. 
+7. You should be able to connect to the API [click this link](http://127.0.0.1:8000/api/v1/audiofiles) to get a simple message confirming connection to the API. *NOTE* If you are serving up your localhost from another **port other than 8000** (the Laravel default), you will need to amend the port in the example here and anywhere else it is shown, including the documentation. 
 
-8. Lastly to work with this project you can now use the provided documentation which can be located in dir `\apidocs\index.html`. Open up the `index.html` file in your browser to view. The docs should walk you through how to use the possible endpoints and expected outcomes with examples for reference. In the docs I reference using the `curl` command to send HTTP requests to the API, but also included in the project is a postman collection you can import into postman should you prefer to use `Speech2Text API.postman_collection.json`.
+8. Lastly, to work with this project you can now use the provided documentation which can be located in dir `\apidocs\index.html`. Open up the `index.html` file in your browser to view. The docs should walk you through how to use the possible endpoints and expected outcomes with examples for reference. In the docs, I reference using the `curl` command to send HTTP requests to the API, but also included in the project is a postman collection. You can import this collection into postman should you prefer to use `Speech2Text API.postman_collection.json`.
 
 ## Running the tests
 
-To run the tests in this project you have 2 options. In the command line use `npm run tests` to run the tests and see the output. Alternatively use `npm run coverage` to run the tests and produce the coverage report. Report will be located in `\tests\coverage\` open up `dashboard.html` in your browser to view the report.
+To run the tests in this project you have 2 options. In the command line use `npm run tests` to run the tests and see the output. Alternatively, use `npm run coverage` to run the tests and produce the coverage report. Report will be located in `\tests\coverage\`.Open up `dashboard.html` in your browser to view the report.
 
-There is currently 6 tests and 45 assertions passing with 2 additional tests marked as risky that still require work. I've concentrated on the methods and controllers I've introduced as part of this project.
+There are currently 6 tests and 45 assertions passing with 2 additional tests marked as risky that still require work. I've concentrated on the methods and controllers I've introduced as part of this project.
 
 ## Limitations
 
-Currently unknown side effects my occur if you try to upload a file which has not been base64 encoded and was not previously a FLAC file. Also if the hertz_rate of the original recording was not at 44,100 this may also fail the API. The encode file include referenced above will work to confirm testing. 
+Currently, unknown side effects my occur if you try to upload a file which has not been base64 encoded and was not previously a FLAC file. Also, if the hertz_rate of the original recording was not at 44,100 this may also fail the API. The encoded files included and referenced above will work to confirm testing. 
 
 Next steps to improve the API:
 
-- [ ] Add the test audio files 
-- [ ] Complete the tests on the two marked risky currently.
-- [ ] Validate incoming file for Base64 encoding
-- [ ] Include a package to check the uploaded file and set some parameters based on the file uploaded  
+- [x] Add the test audio files 
+- [ ] Complete the tests on the two marked 'risky' currently.
+- [ ] When the returned transcript returns null (i.e. Google failed to transcribed) respond appropriately notifying user.
+- [ ] Add test for the above scenario using the file that doesn't get transcribed 'hawkeye' returns.
+- [ ] When the returned transcript returns a lower confidence score respond appropriately to user.
+- [ ] Add test for the above scenario using the file that doesn't get transcribed very well 'cap_america' returns.
+- [ ] Validate incoming file as Base64 encoded
+- [ ] Include a package to check the uploaded file and set some parameters based on the file uploaded
 - [ ] Once I can establish the length of the audio file include the additional Google logic to deal with larger audio files asynchronously.
    
 ## Authors

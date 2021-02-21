@@ -18,9 +18,9 @@ class CreateAudioFilesTable extends Migration
             $table->text('file_name')->comment('File Name');
             $table->text('mime')->comment('Mime Type');
             $table->integer('rate_hertz')->comment('Rate Hertz');
-            $table->text('transcript')->comment('Transcript');
-            $table->float('confidence')->comment('Confidence');
-            $table->integer('no_of_alternatives')->comment('No. of Alternatives');
+            $table->text('transcript')->nullable()->comment('Transcript');
+            $table->float('confidence')->nullable()->comment('Confidence');
+            $table->integer('no_of_alternatives')->nullable()->comment('No. of Alternatives');
             $table->integer('file_size')->comment('File Size');
             $table->dateTime('request_sent_at')->comment('Request Sent At');
             $table->timestamps();
